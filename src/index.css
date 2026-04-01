@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-brand-dark text-white;
+@layer base {
+  body {
+    @apply bg-[#0a0a0a] text-white antialiased;
+  }
 }
