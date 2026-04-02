@@ -18,7 +18,7 @@ const languages = [
 ];
 
 const Header: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +40,14 @@ const Header: React.FC = () => {
     setIsLangMenuOpen(false);
   };
 
+  const scrollToReviews = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const reviewsSection = document.getElementById('reviews');
+    if (reviewsSection) {
+      reviewsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-[#0a0a0a]/80 backdrop-blur-sm border-b border-white/5">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -52,10 +60,10 @@ const Header: React.FC = () => {
         </div>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-          <a href="#" className="hover:text-white transition">Home</a>
-          <a href="#" className="hover:text-white transition">How it works</a>
-          <a href="#" className="hover:text-white transition">Reviews</a>
-          <a href="#" className="hover:text-white transition">FAQ</a>
+          <a href="#" className="hover:text-white transition">{t('navHome')}</a>
+          <a href="#" className="hover:text-white transition">{t('navHowItWorks')}</a>
+          <a href="#reviews" onClick={scrollToReviews} className="hover:text-white transition">{t('navReviews')}</a>
+          <a href="#" className="hover:text-white transition">{t('navFaq')}</a>
           <a href="https://t.me/best_obmen_news" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[#10b981] hover:text-[#059669] transition">
             <span className="text-lg">@</span>
             <span>news</span>

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Header from './components/Header';
 import ExchangeForm from './components/ExchangeForm';
 import CheckoutPage from './components/CheckoutPage';
-import Partners from './components/Partners';
+import RecentExchanges from './components/RecentExchanges';
 import Reviews from './components/Reviews';
 import Footer from './components/Footer';
 
@@ -55,7 +55,7 @@ const App: React.FC = () => {
               element={
                 <>
                   <ExchangeForm />
-                  <Partners />
+                  <RecentExchanges />
                   <Reviews />
                 </>
               } 

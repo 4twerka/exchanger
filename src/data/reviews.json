@@ -1,0 +1,212 @@
+[
+    {
+      "id": 1,
+      "name": "Michael S.",
+      "text": "Extremely fast exchange. Got my EUR in less than 5 minutes. Highly recommended!",
+      "rating": 5,
+      "date": "02.04.2026"
+    },
+    {
+      "id": 2,
+      "name": "CryptoTrader99",
+      "text": "Best rate I could find today for USDT to PLN. No hidden fees, everything is transparent.",
+      "rating": 5,
+      "date": "02.04.2026"
+    },
+    {
+      "id": 3,
+      "name": "Sarah Jenkins",
+      "text": "It was my first time exchanging crypto, and the Telegram support was super helpful. Thank you!",
+      "rating": 5,
+      "date": "01.04.2026"
+    },
+    {
+      "id": 4,
+      "name": "Alex_UK",
+      "text": "Solid service. The transaction took a bit longer than expected (about 15 mins), but the rate was locked in.",
+      "rating": 4,
+      "date": "01.04.2026"
+    },
+    {
+      "id": 5,
+      "name": "David",
+      "text": "No KYC is a huge plus for me. Fast, anonymous, and reliable. Will use again.",
+      "rating": 5,
+      "date": "31.03.2026"
+    },
+    {
+      "id": 6,
+      "name": "Elena M.",
+      "text": "Exchanged a large amount of USDT to CZK. They split it into two transactions for safety. Great communication.",
+      "rating": 5,
+      "date": "30.03.2026"
+    },
+    {
+      "id": 7,
+      "name": "Thomas_B",
+      "text": "Very straightforward process. The calculator on the website is accurate, no surprises at the end.",
+      "rating": 5,
+      "date": "29.03.2026"
+    },
+    {
+      "id": 8,
+      "name": "InvestPro",
+      "text": "Good exchange, but the reserves for HUF were a bit low yesterday. Still, the support team sorted it out quickly.",
+      "rating": 4,
+      "date": "28.03.2026"
+    },
+    {
+      "id": 9,
+      "name": "Mark D.",
+      "text": "I love how it just redirects you to Telegram with a ready-made message. Saves so much time.",
+      "rating": 5,
+      "date": "28.03.2026"
+    },
+    {
+      "id": 10,
+      "name": "Anna Kowalska",
+      "text": "Works flawlessly. I swap my crypto earnings to my Polish bank account here every month.",
+      "rating": 5,
+      "date": "27.03.2026"
+    },
+    {
+      "id": 11,
+      "name": "Victor",
+      "text": "Fast processing and polite operators. Exchanged BTC to EUR without any issues.",
+      "rating": 5,
+      "date": "26.03.2026"
+    },
+    {
+      "id": 12,
+      "name": "Lucas",
+      "text": "The 5-minute fixed rate feature is a lifesaver in this volatile market. Great job guys.",
+      "rating": 5,
+      "date": "25.03.2026"
+    },
+    {
+      "id": 13,
+      "name": "Emma_W",
+      "text": "Smooth and easy. I got the funds on my card exactly as calculated on the site.",
+      "rating": 5,
+      "date": "24.03.2026"
+    },
+    {
+      "id": 14,
+      "name": "JohnDoe",
+      "text": "Operator replied instantly, but the blockchain network was congested so I had to wait for confirmations. Not their fault though.",
+      "rating": 4,
+      "date": "23.03.2026"
+    },
+    {
+      "id": 15,
+      "name": "Web3_Max",
+      "text": "Clean interface, fast execution, excellent support. 10/10.",
+      "rating": 5,
+      "date": "22.03.2026"
+    },
+    {
+      "id": 16,
+      "name": "Sophie",
+      "text": "I was skeptical because there's no registration, but it actually makes things so much better and faster.",
+      "rating": 5,
+      "date": "21.03.2026"
+    },
+    {
+      "id": 17,
+      "name": "Andrei",
+      "text": "Best place to cash out USDT in Romania. Rates are better than local ATMs.",
+      "rating": 5,
+      "date": "20.03.2026"
+    },
+    {
+      "id": 18,
+      "name": "Liam T.",
+      "text": "Everything went perfectly. The operator was very professional and guided me through my first transaction.",
+      "rating": 5,
+      "date": "19.03.2026"
+    },
+    {
+      "id": 19,
+      "name": "CryptoFox",
+      "text": "Sometimes they are offline late at night, but during the day the service is lightning fast.",
+      "rating": 4,
+      "date": "18.03.2026"
+    },
+    {
+      "id": 20,
+      "name": "Maria",
+      "text": "I use this service weekly. Never had a single issue. The funds always arrive quickly.",
+      "rating": 5,
+      "date": "17.03.2026"
+    },
+    {
+      "id": 21,
+      "name": "Paul_G",
+      "text": "Swapped ETH for GBP. Took around 10 minutes total. I'm very satisfied.",
+      "rating": 5,
+      "date": "16.03.2026"
+    },
+    {
+      "id": 22,
+      "name": "Daniel",
+      "text": "Excellent exchange. The lack of KYC is the main reason I use it, plus the rates are very fair.",
+      "rating": 5,
+      "date": "15.03.2026"
+    },
+    {
+      "id": 23,
+      "name": "Katarina",
+      "text": "Really cool that I can choose Viber or WhatsApp for contact. Very convenient.",
+      "rating": 5,
+      "date": "14.03.2026"
+    },
+    {
+      "id": 24,
+      "name": "Simon",
+      "text": "Good support. I made a mistake with my IBAN, but the operator caught it and helped me fix it before sending.",
+      "rating": 5,
+      "date": "13.03.2026"
+    },
+    {
+      "id": 25,
+      "name": "Nina88",
+      "text": "Fast and secure. What you see on the calculator is exactly what you get.",
+      "rating": 5,
+      "date": "12.03.2026"
+    },
+    {
+      "id": 26,
+      "name": "Oliver",
+      "text": "Decent service. Wish they had more altcoins available for exchange, but for USDT it's perfect.",
+      "rating": 4,
+      "date": "11.03.2026"
+    },
+    {
+      "id": 27,
+      "name": "Robert_W",
+      "text": "I've tried many exchanges, and this one is by far the simplest and fastest.",
+      "rating": 5,
+      "date": "10.03.2026"
+    },
+    {
+      "id": 28,
+      "name": "Julia",
+      "text": "Transferred a huge amount. Was nervous, but the support team was very reassuring and fast.",
+      "rating": 5,
+      "date": "09.03.2026"
+    },
+    {
+      "id": 29,
+      "name": "Kevin",
+      "text": "Amazing exchange rate today. The money hit my bank account in 4 minutes.",
+      "rating": 5,
+      "date": "08.03.2026"
+    },
+    {
+      "id": 30,
+      "name": "TraderX",
+      "text": "Top-tier service. No bullshit, just fast crypto to fiat exchange. Keep it up!",
+      "rating": 5,
+      "date": "07.03.2026"
+    }
+  ]
