@@ -59,20 +59,39 @@ const RecentExchanges: React.FC = () => {
         const getCur = isCryptoToFiat ? fiats[Math.floor(Math.random()*fiats.length)] : cryptos[Math.floor(Math.random()*cryptos.length)];
         const isMicro = Math.random() > 0.6; 
 
+        // Розраховуємо суми на основі ліміту 50$ - 50,000$
         let giveAmt;
-        if (isCryptoToFiat) {
-           if (giveCur === 'BTC') giveAmt = isMicro ? (Math.random() * 0.001 + 0.0003).toFixed(4) : (Math.random() * 0.1 + 0.01).toFixed(3);
-           else if (giveCur === 'ETH') giveAmt = isMicro ? (Math.random() * 0.02 + 0.005).toFixed(3) : (Math.random() * 1.5 + 0.1).toFixed(2);
-           else giveAmt = isMicro ? Math.floor(Math.random() * 80 + 20) : Math.floor(Math.random() * 2000 + 100);
+        const usdRate = rates[giveCur] || 1;
+        
+        // 50$ мінімум
+        const minAmountInGiveCur = 50 / usdRate;
+        
+        // Максимальні суми (щоб виглядало реалістично)
+        // isMicro: обміни від 50$ до ~500$
+        // !isMicro: обміни від 500$ до ~25000$
+        
+        if (giveCur === 'BTC') {
+            const minBtc = Math.max(0.0008, minAmountInGiveCur); // Запас
+            giveAmt = isMicro 
+                ? (Math.random() * (0.008 - minBtc) + minBtc).toFixed(4) 
+                : (Math.random() * 0.4 + 0.01).toFixed(4);
+        } else if (giveCur === 'ETH') {
+            const minEth = Math.max(0.015, minAmountInGiveCur);
+            giveAmt = isMicro 
+                ? (Math.random() * (0.15 - minEth) + minEth).toFixed(3) 
+                : (Math.random() * 8 + 0.2).toFixed(3);
         } else {
-           if (giveCur === 'HUF') giveAmt = isMicro ? Math.floor(Math.random() * 15000 + 5000) : Math.floor(Math.random() * 300000 + 50000);
-           else if (giveCur === 'CZK' || giveCur === 'UAH') giveAmt = isMicro ? Math.floor(Math.random() * 1500 + 600) : Math.floor(Math.random() * 40000 + 2500);
-           else giveAmt = isMicro ? Math.floor(Math.random() * 80 + 20) : Math.floor(Math.random() * 2000 + 100);
+            // Для фіату та USDT
+            const minFiat = Math.max(50, minAmountInGiveCur);
+            giveAmt = isMicro 
+                ? Math.floor(Math.random() * (500 / usdRate - minFiat) + minFiat) 
+                : Math.floor(Math.random() * (25000 / usdRate) + (500 / usdRate));
         }
 
-        const valueInUSD = Number(giveAmt) * (rates[giveCur] || 1);
+        const valueInUSD = Number(giveAmt) * usdRate;
         let getAmt = (valueInUSD / (rates[getCur] || 1)) * 0.98;
         let getAmtStr;
+        
         if (getCur === 'BTC') getAmtStr = getAmt.toFixed(5);
         else if (getCur === 'ETH') getAmtStr = getAmt.toFixed(4);
         else getAmtStr = getAmt.toFixed(2);

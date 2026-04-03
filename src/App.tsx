@@ -6,6 +6,11 @@ import ExchangeForm from './components/ExchangeForm';
 import CheckoutPage from './components/CheckoutPage';
 import RecentExchanges from './components/RecentExchanges';
 import Reviews from './components/Reviews';
+import WorkingHours from './components/WorkingHours';
+import Faq from './components/Faq';
+import SiteRules from './components/SiteRules';
+import Partnership from './components/Partnership';
+import AmlPolicy from './components/AmlPolicy';
 import Footer from './components/Footer';
 
 const App: React.FC = () => {
@@ -49,7 +54,6 @@ const App: React.FC = () => {
         <Header />
         <main className="flex-grow pt-24">
           <Routes>
-
             <Route 
               path="/" 
               element={
@@ -60,12 +64,14 @@ const App: React.FC = () => {
                 </>
               } 
             />
-
             <Route path="/exchange" element={<CheckoutPage />} />
-
+            <Route path="/schedule" element={<WorkingHours />} />
+            <Route path="/faq" element={<Faq />} />
+            <Route path="/rules" element={<SiteRules />} />
+            <Route path="/partnership" element={<Partnership />} />
+            <Route path="/aml" element={<AmlPolicy />} />
           </Routes>
         </main>
-        
         <Footer />
       </div>
     </Router>

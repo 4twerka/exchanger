@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const languages = [
   { code: 'en', name: 'English', flag: 'gb' },
@@ -14,13 +15,17 @@ const languages = [
   { code: 'pt', name: 'Português', flag: 'pt' },
   { code: 'nl', name: 'Nederlands', flag: 'nl' },
   { code: 'sv', name: 'Svenska', flag: 'se' },
-  { code: 'uk', name: 'Українська', flag: 'ua' }
+  { code: 'uk', name: 'Українська', flag: 'ua' },
+  { code: 'ru', name: 'Русский', flag: 'ru' } // Додана російська мова
 ];
 
 const Header: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const currentLangCode = i18n.language || 'en';
   const currentLang = languages.find(l => l.code === currentLangCode) || languages[0];
@@ -35,6 +40,21 @@ const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Автоматичний скрол після переходу на головну сторінку до відгуків
+  useEffect(() => {
+    if (location.hash === '#reviews') {
+      const section = document.getElementById('reviews');
+      if (section) {
+        setTimeout(() => {
+          const headerOffset = 80;
+          const elementPosition = section.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - headerOffset;
+          window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+        }, 100);
+      }
+    }
+  }, [location]);
+
   const changeLanguage = (code: string) => {
     i18n.changeLanguage(code);
     setIsLangMenuOpen(false);
@@ -42,32 +62,43 @@ const Header: React.FC = () => {
 
   const scrollToReviews = (e: React.MouseEvent) => {
     e.preventDefault();
-    const reviewsSection = document.getElementById('reviews');
-    if (reviewsSection) {
-      reviewsSection.scrollIntoView({ behavior: 'smooth' });
+    if (location.pathname !== '/') {
+      navigate('/#reviews');
+      return;
     }
+    const section = document.getElementById('reviews');
+    if (section) {
+      const headerOffset = 80;
+      const elementPosition = section.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  // Плавний скрол на самий верх при переході на нові сторінки
+  const handlePageChange = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-[#0a0a0a]/80 backdrop-blur-sm border-b border-white/5">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         
-        <div className="flex items-center gap-2">
+        <Link to="/" onClick={handlePageChange} className="flex items-center gap-2 cursor-pointer">
           <div className="w-8 h-8 rounded-full bg-[#10b981] flex items-center justify-center font-bold text-xl text-white">
             O
           </div>
-          <span className="text-2xl font-bold">Obmen</span>
-        </div>
+          <span className="text-2xl font-bold text-white">Best Obmen</span>
+        </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-          <a href="#" className="hover:text-white transition">{t('navHome')}</a>
-          <a href="#" className="hover:text-white transition">{t('navHowItWorks')}</a>
-          <a href="#reviews" onClick={scrollToReviews} className="hover:text-white transition">{t('navReviews')}</a>
-          <a href="#" className="hover:text-white transition">{t('navFaq')}</a>
-          <a href="https://t.me/best_obmen_news" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[#10b981] hover:text-[#059669] transition">
-            <span className="text-lg">@</span>
-            <span>news</span>
-          </a>
+          <Link to="/" onClick={handlePageChange} className="hover:text-white transition">{t('navHome')}</Link>
+          <Link to="/schedule" onClick={handlePageChange} className="hover:text-white transition">{t('navSchedule')}</Link>
+          <a href="/#reviews" onClick={scrollToReviews} className="hover:text-white transition">{t('navReviews')}</a>
+          <Link to="/faq" onClick={handlePageChange} className="hover:text-white transition">{t('navFaq')}</Link>
         </nav>
 
         <div className="relative" ref={menuRef}>
@@ -82,7 +113,7 @@ const Header: React.FC = () => {
                 className="w-full h-full object-cover" 
               />
             </div>
-            <span className="text-sm font-medium">{currentLang.name}</span>
+            <span className="text-sm font-medium text-white">{currentLang.name}</span>
             <svg 
               className={`w-4 h-4 text-gray-400 transform transition-transform duration-200 ${isLangMenuOpen ? 'rotate-180' : ''}`} 
               fill="none" 

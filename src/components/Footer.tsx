@@ -1,8 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
+  const currentYear = new Date().getFullYear();
+
+  const handlePageChange = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <footer className="border-t border-white/5 pt-16 pb-12 bg-[#0a0a0a]">
@@ -10,7 +16,7 @@ const Footer: React.FC = () => {
         <div className="flex items-start justify-between">
           
           <div className="flex flex-col gap-6">
-            <span className="text-sm text-gray-600">© 2026 Best Obmen</span>
+            <span className="text-sm text-gray-600">© {currentYear} Best Obmen</span>
             <div className="flex gap-4 text-gray-500">
               <a href="#" className="hover:text-white transition">TG</a>
             </div>
@@ -25,12 +31,11 @@ const Footer: React.FC = () => {
 
           <div className="flex gap-20 text-sm text-gray-500">
             <div className="flex flex-col gap-3">
-              <a href="#" className="hover:text-white transition">{t('amlPolicy')}</a>
-              <a href="#" className="hover:text-white transition">{t('termsAndConditions')}</a>
+              <Link to="/aml" onClick={handlePageChange} className="hover:text-white transition">{t('amlPolicy')}</Link>
+              <Link to="/rules" onClick={handlePageChange} className="hover:text-white transition">{t('siteRules')}</Link>
             </div>
             <div className="flex flex-col gap-3">
-              <a href="#" className="hover:text-white transition">{t('siteRules')}</a>
-              <a href="#" className="hover:text-white transition">{t('partnershipProgram')}</a>
+              <Link to="/partnership" onClick={handlePageChange} className="hover:text-white transition">{t('partnershipProgram')}</Link>
             </div>
           </div>
 

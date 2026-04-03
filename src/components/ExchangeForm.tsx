@@ -28,6 +28,13 @@ const currencies: Currency[] = [
   { id: 'ron', code: 'RON', name: 'Romanian Leu', type: 'fiat', flag: 'ro' },
 ];
 
+// Резервні курси на випадок, якщо API блокує запити
+const FALLBACK_USD_RATES: Record<string, number> = {
+  USDT: 1, BTC: 65000, ETH: 3300, EUR: 1.08,
+  UAH: 0.025, PLN: 0.25, GBP: 1.25, CZK: 0.043,
+  HUF: 0.0028, RON: 0.22
+};
+
 interface CurrencyInputProps {
   label: string;
   currency: Currency;
@@ -35,10 +42,11 @@ interface CurrencyInputProps {
   onChangeValue: (value: string) => void;
   onSelectCurrency: (currency: Currency) => void;
   quickAmounts?: number[];
+  error?: string;
 }
 
 const CurrencyInput: React.FC<CurrencyInputProps> = ({ 
-  label, currency, value, onChangeValue, onSelectCurrency, quickAmounts 
+  label, currency, value, onChangeValue, onSelectCurrency, quickAmounts, error 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,7 +61,7 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
 
   return (
     <div className="flex-1 flex flex-col gap-2 relative" ref={dropdownRef}>
-      <div className={`border border-white/5 bg-[#1a1a1a] p-5 rounded-2xl transition ${isOpen ? 'border-[#10b981]' : 'hover:border-white/10'}`}>
+      <div className={`border border-white/5 bg-[#1a1a1a] p-5 rounded-2xl transition ${isOpen ? 'border-[#10b981]' : error ? 'border-red-500' : 'hover:border-white/10'}`}>
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm font-medium text-gray-400">{label}</div>
         </div>
@@ -76,6 +84,8 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
           />
         </div>
       </div>
+      
+      {error && <div className="text-red-500 text-xs px-2">{error}</div>}
 
       {quickAmounts && (
         <div className="flex gap-2 px-1">
@@ -111,9 +121,11 @@ const ExchangeForm: React.FC = () => {
   const [getCurrency, setGetCurrency] = useState<Currency>(currencies[3]); 
   
   const [rate, setRate] = useState<number>(0);
+  const [usdRate, setUsdRate] = useState<number>(1); 
   const [amountGive, setAmountGive] = useState<string>('');
   const [amountGet, setAmountGet] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
   
   const [timeLeft, setTimeLeft] = useState<number>(300);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
@@ -138,18 +150,25 @@ const ExchangeForm: React.FC = () => {
       
       try {
         let newRate = 0;
+        let giveUsdRate = 1;
         
         if (giveCurrency.type === 'fiat' && getCurrency.type === 'fiat') {
           const res = await fetch(`https://open.er-api.com/v6/latest/${giveCurrency.code}`);
           if (!res.ok) throw new Error('API Rate Limit');
           const data = await res.json();
-          if (data && data.rates) newRate = data.rates[getCurrency.code];
+          if (data && data.rates) {
+            newRate = data.rates[getCurrency.code];
+            const usdRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
+            const usdData = await usdRes.json();
+            giveUsdRate = 1 / usdData.rates[giveCurrency.code];
+          }
         } else if (giveCurrency.type === 'crypto' && getCurrency.type === 'crypto') {
           const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${giveCurrency.id},${getCurrency.id}&vs_currencies=usd`);
           if (!res.ok) throw new Error('API Rate Limit');
           const data = await res.json();
           if (data[giveCurrency.id] && data[getCurrency.id]) {
             newRate = data[giveCurrency.id].usd / data[getCurrency.id].usd;
+            giveUsdRate = data[giveCurrency.id].usd;
           }
         } else {
           const cryptoId = giveCurrency.type === 'crypto' ? giveCurrency.id : getCurrency.id;
@@ -167,12 +186,19 @@ const ExchangeForm: React.FC = () => {
           if (cryptoUsd && usdFiat) {
             const cryptoToFiatRate = cryptoUsd * usdFiat; 
             newRate = giveCurrency.type === 'crypto' ? cryptoToFiatRate : 1 / cryptoToFiatRate;
+            
+            if (giveCurrency.type === 'crypto') {
+              giveUsdRate = cryptoUsd;
+            } else {
+               giveUsdRate = 1 / fiatData.rates[giveCurrency.code];
+            }
           }
         }
         
         if (newRate > 0 && isMounted) {
           const finalRate = newRate * 0.98;
           setRate(finalRate);
+          setUsdRate(giveUsdRate);
           setTimeLeft(300);
           localStorage.setItem(cacheKey, finalRate.toString());
         } else if (isMounted) {
@@ -180,12 +206,20 @@ const ExchangeForm: React.FC = () => {
         }
       } catch (error) { 
         if (isMounted) {
+          // НАДІЙНИЙ ФОЛБЕК: Якщо API лежить, беремо жорстко зашиті курси, щоб математика не ламалася
+          const fallbackGiveUsd = FALLBACK_USD_RATES[giveCurrency.code] || 1;
+          const fallbackGetUsd = FALLBACK_USD_RATES[getCurrency.code] || 1;
+          
+          setUsdRate(fallbackGiveUsd);
+
           const cachedRate = localStorage.getItem(cacheKey);
           if (cachedRate) {
             setRate(parseFloat(cachedRate));
             setTimeLeft(60);
           } else {
-            setTimeLeft(10);
+            const emergencyRate = (fallbackGiveUsd / fallbackGetUsd) * 0.98;
+            setRate(emergencyRate);
+            setTimeLeft(60);
           }
         }
       } finally { 
@@ -217,33 +251,65 @@ const ExchangeForm: React.FC = () => {
     return `${m}:${s}`;
   };
 
+  // Валідація лімітів з правильним округленням
+  const validateLimits = (valueInGiveCurrency: number) => {
+      const valueInUsd = valueInGiveCurrency * usdRate;
+      
+      if (valueInUsd < 50) {
+          const minAmt = 50 / usdRate;
+          const minFormatted = giveCurrency.type === 'crypto' ? minAmt.toFixed(5) : minAmt.toFixed(2);
+          setError(`${t('minExchange', 'Minimum amount:')} ${minFormatted} ${giveCurrency.code} (~50 EUR)`);
+          return false;
+      } else if (valueInUsd > 50000) {
+          const maxAmt = 50000 / usdRate;
+          const maxFormatted = giveCurrency.type === 'crypto' ? maxAmt.toFixed(5) : maxAmt.toFixed(2);
+          setError(`${t('maxExchange', 'Maximum amount:')} ${maxFormatted} ${giveCurrency.code} (~50,000 EUR)`);
+          return false;
+      }
+      
+      setError('');
+      return true;
+  };
+
   useEffect(() => {
     if (amountGive && rate > 0 && !isSameCurrency) {
       const numValue = parseFloat(amountGive);
       if (!isNaN(numValue)) {
         setAmountGet((numValue * rate).toFixed(4));
+        validateLimits(numValue);
       }
+    } else {
+        setError('');
     }
-  }, [rate, isSameCurrency]);
+  }, [rate, isSameCurrency, usdRate]); // usdRate додано в залежності
 
   const handleGiveChange = (value: string) => {
     setAmountGive(value);
     if (value === '' || isSameCurrency || rate <= 0) { 
       setAmountGet(''); 
+      setError('');
       return; 
     }
     const numValue = parseFloat(value);
-    if (!isNaN(numValue)) setAmountGet((numValue * rate).toFixed(4));
+    if (!isNaN(numValue)) {
+        setAmountGet((numValue * rate).toFixed(4));
+        validateLimits(numValue);
+    }
   };
 
   const handleGetChange = (value: string) => {
     setAmountGet(value);
     if (value === '' || isSameCurrency || rate <= 0) { 
       setAmountGive(''); 
+      setError('');
       return; 
     }
     const numValue = parseFloat(value);
-    if (!isNaN(numValue)) setAmountGive((numValue / rate).toFixed(4));
+    if (!isNaN(numValue)) {
+        const newGiveAmount = numValue / rate;
+        setAmountGive(newGiveAmount.toFixed(4));
+        validateLimits(newGiveAmount);
+    }
   };
 
   const swapCurrencies = () => {
@@ -253,7 +319,7 @@ const ExchangeForm: React.FC = () => {
   };
 
   const handleExchangeSubmit = () => {
-    if (isLoading || isSameCurrency || rate <= 0 || !amountGive || parseFloat(amountGive) <= 0) return;
+    if (isLoading || isSameCurrency || rate <= 0 || !amountGive || parseFloat(amountGive) <= 0 || error) return;
     
     navigate('/exchange', {
       state: {
@@ -276,6 +342,7 @@ const ExchangeForm: React.FC = () => {
               label={t('youGive')} currency={giveCurrency} value={amountGive}
               onChangeValue={handleGiveChange} onSelectCurrency={setGiveCurrency}
               quickAmounts={[100, 500, 1000]} 
+              error={error}
             />
             
             <div className="flex items-center justify-center pt-0 md:pt-8 py-4 md:py-0">
@@ -298,7 +365,7 @@ const ExchangeForm: React.FC = () => {
                 <div className="font-medium text-gray-400 text-sm">
                   {t('exchangeRate')}: 1 {giveCurrency.code} = <span className="text-[#10b981]">{isLoading && rate <= 0 ? '...' : rate.toFixed(4)}</span> {getCurrency.code}
                 </div>
-                {amountGive && parseFloat(amountGive) > 0 && rate > 0 && (
+                {amountGive && parseFloat(amountGive) > 0 && rate > 0 && !error && (
                   <div className="text-sm text-gray-400 flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-lg border border-white/5">
                     <svg className="w-4 h-4 text-[#10b981]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {t('courseFixed')} <span className="font-bold text-white w-[40px]">{formatTime(timeLeft)}</span>
@@ -311,7 +378,7 @@ const ExchangeForm: React.FC = () => {
           <div className="flex flex-col items-center gap-4">
             <button 
               onClick={handleExchangeSubmit}
-              disabled={isLoading || isSameCurrency || rate <= 0 || !amountGive || parseFloat(amountGive) <= 0}
+              disabled={isLoading || isSameCurrency || rate <= 0 || !amountGive || parseFloat(amountGive) <= 0 || !!error}
               className="w-full bg-[#10b981] hover:bg-[#059669] disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none transition-colors text-white py-4 px-8 rounded-xl font-bold text-lg shadow-lg shadow-green-900/20"
             >
               {t('exchange')}
