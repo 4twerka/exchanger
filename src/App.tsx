@@ -18,6 +18,16 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const detectLanguage = async () => {
+      // Якщо користувач вже САМ вибрав мову (вона збережена) - не чіпаємо!
+      const userSelectedLang = localStorage.getItem('i18nextLng_user_selected');
+      if (userSelectedLang) {
+        // Просто переконуємося, що стоїть його мова
+        if (i18n.language !== userSelectedLang) {
+          i18n.changeLanguage(userSelectedLang);
+        }
+        return;
+      }
+
       try {
         const response = await fetch('https://ipapi.co/json/');
         const data = await response.json();
@@ -35,7 +45,8 @@ const App: React.FC = () => {
           'PT': 'pt',
           'NL': 'nl',
           'SE': 'sv',
-          'UA': 'uk'
+          'UA': 'uk',
+          'RU': 'ru', 'BY': 'ru', 'KZ': 'ru' // Додані країни для RU
         };
 
         const detectedLang = countryToLang[country] || 'en';

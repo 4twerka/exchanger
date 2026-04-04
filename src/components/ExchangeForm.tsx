@@ -28,7 +28,6 @@ const currencies: Currency[] = [
   { id: 'ron', code: 'RON', name: 'Romanian Leu', type: 'fiat', flag: 'ro' },
 ];
 
-// Резервні курси на випадок, якщо API блокує запити
 const FALLBACK_USD_RATES: Record<string, number> = {
   USDT: 1, BTC: 65000, ETH: 3300, EUR: 1.08,
   UAH: 0.025, PLN: 0.25, GBP: 1.25, CZK: 0.043,
@@ -61,6 +60,20 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
 
   return (
     <div className="flex-1 flex flex-col gap-2 relative" ref={dropdownRef}>
+      <style>
+        {`
+          /* Надійно приховуємо стрілочки (spin buttons) у всіх браузерах */
+          .hide-arrows::-webkit-outer-spin-button,
+          .hide-arrows::-webkit-inner-spin-button {
+            -webkit-appearance: none !important;
+            margin: 0 !important;
+          }
+          .hide-arrows {
+            -moz-appearance: textfield !important;
+          }
+        `}
+      </style>
+      
       <div className={`border border-white/5 bg-[#1a1a1a] p-5 rounded-2xl transition ${isOpen ? 'border-[#10b981]' : error ? 'border-red-500' : 'hover:border-white/10'}`}>
         <div className="flex items-center justify-between mb-2">
           <div className="text-sm font-medium text-gray-400">{label}</div>
@@ -80,7 +93,8 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
             placeholder="0.00" 
             value={value}
             onChange={(e) => onChangeValue(e.target.value)}
-            className="bg-transparent text-right text-2xl sm:text-3xl font-bold w-1/2 focus:outline-none text-white appearance-none" 
+            className="hide-arrows bg-transparent text-right text-2xl sm:text-3xl font-bold w-1/2 focus:outline-none focus:ring-0 outline-none border-none text-white appearance-none" 
+            style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
           />
         </div>
       </div>
@@ -206,7 +220,6 @@ const ExchangeForm: React.FC = () => {
         }
       } catch (error) { 
         if (isMounted) {
-          // НАДІЙНИЙ ФОЛБЕК: Якщо API лежить, беремо жорстко зашиті курси, щоб математика не ламалася
           const fallbackGiveUsd = FALLBACK_USD_RATES[giveCurrency.code] || 1;
           const fallbackGetUsd = FALLBACK_USD_RATES[getCurrency.code] || 1;
           
@@ -251,7 +264,6 @@ const ExchangeForm: React.FC = () => {
     return `${m}:${s}`;
   };
 
-  // Валідація лімітів з правильним округленням
   const validateLimits = (valueInGiveCurrency: number) => {
       const valueInUsd = valueInGiveCurrency * usdRate;
       
@@ -281,7 +293,7 @@ const ExchangeForm: React.FC = () => {
     } else {
         setError('');
     }
-  }, [rate, isSameCurrency, usdRate]); // usdRate додано в залежності
+  }, [rate, isSameCurrency, usdRate]);
 
   const handleGiveChange = (value: string) => {
     setAmountGive(value);
@@ -333,7 +345,8 @@ const ExchangeForm: React.FC = () => {
   };
 
   return (
-    <section className="pt-32 pb-24 relative">
+    // Зменшено відступ зверху на мобільних пристроях (з pt-32 на pt-24 md:pt-32)
+    <section className="pt-24 md:pt-32 pb-24 relative">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto border border-white/5 bg-[#121212] p-8 rounded-3xl shadow-2xl relative">
 
