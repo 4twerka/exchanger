@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Header from './components/Header';
@@ -18,10 +18,8 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const detectLanguage = async () => {
-      // Якщо користувач вже САМ вибрав мову (вона збережена) - не чіпаємо!
       const userSelectedLang = localStorage.getItem('i18nextLng_user_selected');
       if (userSelectedLang) {
-        // Просто переконуємося, що стоїть його мова
         if (i18n.language !== userSelectedLang) {
           i18n.changeLanguage(userSelectedLang);
         }
@@ -46,7 +44,7 @@ const App: React.FC = () => {
           'NL': 'nl',
           'SE': 'sv',
           'UA': 'uk',
-          'RU': 'ru', 'BY': 'ru', 'KZ': 'ru' // Додані країни для RU
+          'RU': 'ru', 'BY': 'ru', 'KZ': 'ru'
         };
 
         const detectedLang = countryToLang[country] || 'en';

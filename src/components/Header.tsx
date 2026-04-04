@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
@@ -42,7 +42,6 @@ const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Блокування скролу сторінки, коли відкрите мобільне меню
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -70,12 +69,12 @@ const Header: React.FC = () => {
     i18n.changeLanguage(code);
     localStorage.setItem('i18nextLng_user_selected', code);
     setIsLangMenuOpen(false);
-    setIsMobileMenuOpen(false); // Закриваємо меню після вибору мови на мобільному
+    setIsMobileMenuOpen(false); 
   };
 
   const scrollToReviews = (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsMobileMenuOpen(false); // Закриваємо меню
+    setIsMobileMenuOpen(false); 
     
     if (location.pathname !== '/') {
       navigate('/#reviews');
@@ -94,15 +93,14 @@ const Header: React.FC = () => {
   };
 
   const handlePageChange = () => {
-    setIsMobileMenuOpen(false); // Закриваємо меню при переході
+    setIsMobileMenuOpen(false); 
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        
-        {/* Логотип */}
+
         <Link to="/" onClick={handlePageChange} className="flex items-center gap-2 cursor-pointer relative z-50">
           <div className="w-8 h-8 rounded-full bg-[#10b981] flex items-center justify-center font-bold text-xl text-white">
             O
@@ -110,7 +108,6 @@ const Header: React.FC = () => {
           <span className="text-2xl font-bold text-white">Best Obmen</span>
         </Link>
 
-        {/* Десктопне меню навігації */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
           <Link to="/" onClick={handlePageChange} className="hover:text-white transition">{t('navHome')}</Link>
           <Link to="/schedule" onClick={handlePageChange} className="hover:text-white transition">{t('navSchedule')}</Link>
@@ -118,10 +115,8 @@ const Header: React.FC = () => {
           <Link to="/faq" onClick={handlePageChange} className="hover:text-white transition">{t('navFaq')}</Link>
         </nav>
 
-        {/* Права частина: Десктопні мови + Бургер кнопка */}
         <div className="flex items-center gap-4 relative z-50">
-          
-          {/* Десктопний вибір мови (ховається на мобільних) */}
+
           <div className="hidden md:block relative" ref={menuRef}>
             <button 
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
@@ -169,7 +164,6 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Кнопка Бургер-меню (показується тільки на мобільних) */}
           <button 
             className="md:hidden text-white p-2 hover:bg-white/5 rounded-lg transition"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -185,7 +179,6 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Мобільне меню (виїжджає зверху вниз) */}
       <div 
         className={`md:hidden absolute top-full left-0 w-full bg-[#0a0a0a] border-b border-white/5 shadow-2xl transition-all duration-300 ease-in-out overflow-hidden ${
           isMobileMenuOpen ? 'max-h-[calc(100vh-70px)] opacity-100' : 'max-h-0 opacity-0'
@@ -216,7 +209,6 @@ const Header: React.FC = () => {
               </svg>
             </button>
 
-            {/* Список мов у мобільному меню */}
             <div className={`transition-all duration-300 overflow-hidden ${isMobileLangOpen ? 'max-h-[500px] mt-4 opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="grid grid-cols-2 gap-2">
                 {languages.map((lang) => (
@@ -236,7 +228,6 @@ const Header: React.FC = () => {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </header>

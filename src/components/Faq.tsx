@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const Faq: React.FC = () => {
@@ -52,8 +52,7 @@ const Faq: React.FC = () => {
                     </svg>
                   </div>
                 </button>
-                
-                {/* Ідеально плавне розкриття через Grid */}
+
                 <div 
                   className={`grid transition-all duration-500 ease-in-out ${
                     openIndex === index ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
