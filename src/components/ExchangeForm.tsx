@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-// const OPERATOR_USERNAME = 'cryptoex69';
+const OPERATOR_USERNAME = 'cryptoex69';
 
 type CurrencyType = 'fiat' | 'crypto';
 
@@ -62,7 +62,6 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
     <div className="flex-1 flex flex-col gap-2 relative" ref={dropdownRef}>
       <style>
         {`
-          /* Надійно приховуємо стрілочки (spin buttons) у всіх браузерах */
           .hide-arrows::-webkit-outer-spin-button,
           .hide-arrows::-webkit-inner-spin-button {
             -webkit-appearance: none !important;
@@ -70,6 +69,14 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
           }
           .hide-arrows {
             -moz-appearance: textfield !important;
+          }
+          @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+          }
+          .animate-pulse-green {
+            animation: pulse-green 2s infinite;
           }
         `}
       </style>
@@ -81,7 +88,7 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
         <div className="flex items-center justify-between">
           <div onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-3 cursor-pointer hover:bg-white/5 p-2 -ml-2 rounded-xl transition w-1/2">
             <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg bg-[#262626] overflow-hidden flex-shrink-0 border border-white/10">
-              {currency.type === 'crypto' ? <span className="text-[#10b981]">{currency.symbol}</span> : <img src={`https://flagcdn.com/w40/${currency.flag}.png`} alt={currency.code} className="w-full h-full object-cover" />}
+              {currency.type === 'crypto' ? <span className="text-[#10b981]">{currency.symbol}</span> : <img src={`https://unpkg.com/flag-icons@6.11.1/flags/4x3/${currency.flag}.svg`} alt={currency.code} className="w-full h-full object-cover" />}
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-xl">{currency.code}</span>
@@ -116,7 +123,7 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
           {currencies.map((c) => (
             <div key={c.code} onClick={() => { onSelectCurrency(c); setIsOpen(false); }} className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer transition">
               <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-[#262626] overflow-hidden border border-white/10 flex-shrink-0">
-                {c.type === 'crypto' ? <span className="text-[#10b981]">{c.symbol}</span> : <img src={`https://flagcdn.com/w40/${c.flag}.png`} alt={c.code} className="w-full h-full object-cover" />}
+                {c.type === 'crypto' ? <span className="text-[#10b981]">{c.symbol}</span> : <img src={`https://unpkg.com/flag-icons@6.11.1/flags/4x3/${c.flag}.svg`} alt={c.code} className="w-full h-full object-cover" />}
               </div>
               <span className="font-bold text-white">{c.code}</span>
             </div>
@@ -140,26 +147,34 @@ const ExchangeForm: React.FC = () => {
   const [amountGet, setAmountGet] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [isOnline, setIsOnline] = useState<boolean>(true);
   
   const [timeLeft, setTimeLeft] = useState<number>(300);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   const isSameCurrency = giveCurrency.code === getCurrency.code;
 
+  // Логіка перевірки робочого часу (10:00 - 00:00 GMT+3)
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      const utcHour = now.getUTCHours();
+      const gmt3Hour = (utcHour + 3) % 24;
+      setIsOnline(gmt3Hour >= 10 && gmt3Hour < 24);
+    };
+
+    checkTime();
+    const interval = setInterval(checkTime, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
-
     const fetchRate = async () => {
-      const cacheKey = `rate_${giveCurrency.code}_${getCurrency.code}`;
-
       if (isSameCurrency) { 
-        if (isMounted) {
-          setRate(1); 
-          setIsLoading(false); 
-        }
+        if (isMounted) { setRate(1); setIsLoading(false); }
         return; 
       }
-      
       if (isMounted && rate === 0) setIsLoading(true);
       
       try {
@@ -168,44 +183,30 @@ const ExchangeForm: React.FC = () => {
         
         if (giveCurrency.type === 'fiat' && getCurrency.type === 'fiat') {
           const res = await fetch(`https://open.er-api.com/v6/latest/${giveCurrency.code}`);
-          if (!res.ok) throw new Error('API Rate Limit');
           const data = await res.json();
-          if (data && data.rates) {
-            newRate = data.rates[getCurrency.code];
-            const usdRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
-            const usdData = await usdRes.json();
-            giveUsdRate = 1 / usdData.rates[giveCurrency.code];
-          }
+          newRate = data.rates[getCurrency.code];
+          const usdRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
+          const usdData = await usdRes.json();
+          giveUsdRate = 1 / usdData.rates[giveCurrency.code];
         } else if (giveCurrency.type === 'crypto' && getCurrency.type === 'crypto') {
           const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${giveCurrency.id},${getCurrency.id}&vs_currencies=usd`);
-          if (!res.ok) throw new Error('API Rate Limit');
           const data = await res.json();
-          if (data[giveCurrency.id] && data[getCurrency.id]) {
-            newRate = data[giveCurrency.id].usd / data[getCurrency.id].usd;
-            giveUsdRate = data[giveCurrency.id].usd;
-          }
+          newRate = data[giveCurrency.id].usd / data[getCurrency.id].usd;
+          giveUsdRate = data[giveCurrency.id].usd;
         } else {
           const cryptoId = giveCurrency.type === 'crypto' ? giveCurrency.id : getCurrency.id;
           const fiatCode = giveCurrency.type === 'fiat' ? giveCurrency.code : getCurrency.code;
           const cryptoRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoId}&vs_currencies=usd`);
-          if (!cryptoRes.ok) throw new Error('API Rate Limit');
           const cryptoData = await cryptoRes.json();
           const cryptoUsd = cryptoData[cryptoId]?.usd;
-          
           const fiatRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
-          if (!fiatRes.ok) throw new Error('API Rate Limit');
           const fiatData = await fiatRes.json();
           const usdFiat = fiatData.rates?.[fiatCode];
           
           if (cryptoUsd && usdFiat) {
             const cryptoToFiatRate = cryptoUsd * usdFiat; 
             newRate = giveCurrency.type === 'crypto' ? cryptoToFiatRate : 1 / cryptoToFiatRate;
-            
-            if (giveCurrency.type === 'crypto') {
-              giveUsdRate = cryptoUsd;
-            } else {
-               giveUsdRate = 1 / fiatData.rates[giveCurrency.code];
-            }
+            giveUsdRate = giveCurrency.type === 'crypto' ? cryptoUsd : 1 / fiatData.rates[giveCurrency.code];
           }
         }
         
@@ -214,47 +215,22 @@ const ExchangeForm: React.FC = () => {
           setRate(finalRate);
           setUsdRate(giveUsdRate);
           setTimeLeft(300);
-          localStorage.setItem(cacheKey, finalRate.toString());
-        } else if (isMounted) {
-          throw new Error("Invalid rate");
         }
       } catch (error) { 
         if (isMounted) {
-          const fallbackGiveUsd = FALLBACK_USD_RATES[giveCurrency.code] || 1;
-          const fallbackGetUsd = FALLBACK_USD_RATES[getCurrency.code] || 1;
-          
-          setUsdRate(fallbackGiveUsd);
-
-          const cachedRate = localStorage.getItem(cacheKey);
-          if (cachedRate) {
-            setRate(parseFloat(cachedRate));
-            setTimeLeft(60);
-          } else {
-            const emergencyRate = (fallbackGiveUsd / fallbackGetUsd) * 0.98;
-            setRate(emergencyRate);
-            setTimeLeft(60);
-          }
+          setUsdRate(FALLBACK_USD_RATES[giveCurrency.code] || 1);
+          setRate((FALLBACK_USD_RATES[giveCurrency.code] / FALLBACK_USD_RATES[getCurrency.code]) * 0.98);
+          setTimeLeft(60);
         }
-      } finally { 
-        if (isMounted) setIsLoading(false); 
-      }
+      } finally { if (isMounted) setIsLoading(false); }
     };
-
     fetchRate();
-    
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [giveCurrency, getCurrency, isSameCurrency, refreshTrigger]);
 
   useEffect(() => {
-    if (timeLeft <= 0) {
-      setRefreshTrigger(prev => prev + 1);
-      return;
-    }
-    const timerId = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
+    if (timeLeft <= 0) { setRefreshTrigger(prev => prev + 1); return; }
+    const timerId = setInterval(() => { setTimeLeft(prev => prev - 1); }, 1000);
     return () => clearInterval(timerId);
   }, [timeLeft]);
 
@@ -266,108 +242,57 @@ const ExchangeForm: React.FC = () => {
 
   const validateLimits = (valueInGiveCurrency: number) => {
       const valueInUsd = valueInGiveCurrency * usdRate;
-      
       if (valueInUsd < 50) {
-          const minAmt = 50 / usdRate;
-          const minFormatted = giveCurrency.type === 'crypto' ? minAmt.toFixed(5) : minAmt.toFixed(2);
-          setError(`${t('minExchange', 'Minimum amount:')} ${minFormatted} ${giveCurrency.code} (~50 EUR)`);
+          setError(`${t('minExchange', 'Minimum amount:')} ${(50 / usdRate).toFixed(giveCurrency.type === 'crypto' ? 5 : 2)} ${giveCurrency.code} (~50 EUR)`);
           return false;
       } else if (valueInUsd > 50000) {
-          const maxAmt = 50000 / usdRate;
-          const maxFormatted = giveCurrency.type === 'crypto' ? maxAmt.toFixed(5) : maxAmt.toFixed(2);
-          setError(`${t('maxExchange', 'Maximum amount:')} ${maxFormatted} ${giveCurrency.code} (~50,000 EUR)`);
+          setError(`${t('maxExchange', 'Maximum amount:')} ${(50000 / usdRate).toFixed(giveCurrency.type === 'crypto' ? 5 : 2)} ${giveCurrency.code} (~50,000 EUR)`);
           return false;
       }
-      
       setError('');
       return true;
   };
 
-  useEffect(() => {
-    if (amountGive && rate > 0 && !isSameCurrency) {
-      const numValue = parseFloat(amountGive);
-      if (!isNaN(numValue)) {
-        setAmountGet((numValue * rate).toFixed(4));
-        validateLimits(numValue);
-      }
-    } else {
-        setError('');
-    }
-  }, [rate, isSameCurrency, usdRate]);
-
   const handleGiveChange = (value: string) => {
     setAmountGive(value);
-    if (value === '' || isSameCurrency || rate <= 0) { 
-      setAmountGet(''); 
-      setError('');
-      return; 
-    }
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-        setAmountGet((numValue * rate).toFixed(4));
-        validateLimits(numValue);
-    }
+    if (!value || isSameCurrency || rate <= 0) { setAmountGet(''); setError(''); return; }
+    const num = parseFloat(value);
+    if (!isNaN(num)) { setAmountGet((num * rate).toFixed(4)); validateLimits(num); }
   };
 
   const handleGetChange = (value: string) => {
     setAmountGet(value);
-    if (value === '' || isSameCurrency || rate <= 0) { 
-      setAmountGive(''); 
-      setError('');
-      return; 
-    }
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-        const newGiveAmount = numValue / rate;
-        setAmountGive(newGiveAmount.toFixed(4));
-        validateLimits(newGiveAmount);
-    }
-  };
-
-  const swapCurrencies = () => {
-    setGiveCurrency(getCurrency);
-    setGetCurrency(giveCurrency);
-    setAmountGive(amountGet);
-  };
-
-  const handleExchangeSubmit = () => {
-    if (isLoading || isSameCurrency || rate <= 0 || !amountGive || parseFloat(amountGive) <= 0 || error) return;
-    
-    navigate('/exchange', {
-      state: {
-        giveCurrency,
-        getCurrency,
-        amountGive,
-        amountGet,
-        rate
-      }
-    });
+    if (!value || isSameCurrency || rate <= 0) { setAmountGive(''); setError(''); return; }
+    const num = parseFloat(value);
+    if (!isNaN(num)) { const newGive = num / rate; setAmountGive(newGive.toFixed(4)); validateLimits(newGive); }
   };
 
   return (
-    // Зменшено відступ зверху на мобільних пристроях (з pt-32 на pt-24 md:pt-32)
     <section className="pt-24 md:pt-32 pb-24 relative">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto border border-white/5 bg-[#121212] p-8 rounded-3xl shadow-2xl relative">
+          
+          <div className="flex items-center gap-2 mb-6 bg-[#1a1a1a] w-fit px-4 py-2 rounded-full border border-white/5">
+            <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-[#10b981] animate-pulse-green' : 'bg-gray-500'}`}></div>
+            <span className={`text-xs font-bold uppercase tracking-widest ${isOnline ? 'text-[#10b981]' : 'text-gray-500'}`}>
+              {isOnline ? t('operatorOnline', 'Operator Online') : 'Operator Offline'}
+            </span>
+          </div>
 
           <div className="flex flex-col md:flex-row items-stretch gap-3 mb-6 relative">
             <CurrencyInput 
               label={t('youGive')} currency={giveCurrency} value={amountGive}
               onChangeValue={handleGiveChange} onSelectCurrency={setGiveCurrency}
-              quickAmounts={[100, 500, 1000]} 
-              error={error}
+              quickAmounts={[100, 500, 1000]} error={error}
             />
             
             <div className="flex items-center justify-center pt-0 md:pt-8 py-4 md:py-0">
-              <button onClick={swapCurrencies} className="p-3 rounded-full bg-[#1a1a1a] border border-white/5 text-gray-400 hover:border-[#10b981] hover:text-[#10b981] transition group z-10">
+              <button onClick={() => {setGiveCurrency(getCurrency); setGetCurrency(giveCurrency); setAmountGive(amountGet);}} className="p-3 rounded-full bg-[#1a1a1a] border border-white/5 text-gray-400 hover:border-[#10b981] hover:text-[#10b981] transition group z-10">
                 <svg className="w-6 h-6 transform group-hover:rotate-180 transition duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
               </button>
             </div>
 
-            <CurrencyInput 
-              label={t('youGet')} currency={getCurrency} value={amountGet}
-              onChangeValue={handleGetChange} onSelectCurrency={setGetCurrency}
-            />
+            <CurrencyInput label={t('youGet')} currency={getCurrency} value={amountGet} onChangeValue={handleGetChange} onSelectCurrency={setGetCurrency} />
           </div>
 
           <div className="flex flex-col items-center justify-between mb-8 gap-4 sm:flex-row">
@@ -388,14 +313,25 @@ const ExchangeForm: React.FC = () => {
             )}
           </div>
 
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col gap-4">
+            <div className="text-center">
+               <span className="text-gray-500 text-xs font-bold uppercase tracking-widest">{t('reserve')}: 50 000+ USDT</span>
+            </div>
+            
             <button 
-              onClick={handleExchangeSubmit}
+              onClick={() => navigate('/exchange', { state: { giveCurrency, getCurrency, amountGive, amountGet, rate }})}
               disabled={isLoading || isSameCurrency || rate <= 0 || !amountGive || parseFloat(amountGive) <= 0 || !!error}
-              className="w-full bg-[#10b981] hover:bg-[#059669] disabled:bg-gray-700 disabled:text-gray-400 disabled:shadow-none transition-colors text-white py-4 px-8 rounded-xl font-bold text-lg shadow-lg shadow-green-900/20"
+              className="w-full bg-[#10b981] hover:bg-[#059669] disabled:bg-gray-700 disabled:text-gray-400 transition-all text-white py-4 px-8 rounded-xl font-bold text-lg shadow-lg shadow-green-900/20"
             >
               {t('exchange')}
             </button>
+
+            <a 
+              href={`https://t.me/${OPERATOR_USERNAME}`} target="_blank" rel="noreferrer"
+              className="w-full border border-white/10 hover:bg-white/5 transition-colors text-white py-4 px-8 rounded-xl font-bold text-center"
+            >
+              {t('writeToTg', 'Write to Telegram')}
+            </a>
           </div>
 
         </div>

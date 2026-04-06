@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
+const OPERATOR_USERNAME = 'cryptoex69';
+
 const Partnership: React.FC = () => {
   const { t } = useTranslation();
 
@@ -36,10 +38,14 @@ const Partnership: React.FC = () => {
               <p className="text-sm text-gray-400">{t('partnerStep3Desc')}</p>
             </div>
           </div>
-
-          <button className="bg-[#10b981] hover:bg-[#059669] transition-colors text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-green-900/20">
+          <a 
+            href={`https://t.me/${OPERATOR_USERNAME}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block bg-[#10b981] hover:bg-[#059669] transition-colors text-white font-bold py-4 px-10 rounded-xl shadow-lg shadow-green-900/20"
+          >
             {t('partnerJoinBtn')}
-          </button>
+          </a>
           
         </div>
       </div>
