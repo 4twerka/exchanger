@@ -154,7 +154,6 @@ const ExchangeForm: React.FC = () => {
 
   const isSameCurrency = giveCurrency.code === getCurrency.code;
 
-  // Логіка перевірки робочого часу (10:00 - 00:00 GMT+3)
   useEffect(() => {
     const checkTime = () => {
       const now = new Date();

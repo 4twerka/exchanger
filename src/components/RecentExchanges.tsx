@@ -59,16 +59,10 @@ const RecentExchanges: React.FC = () => {
         const getCur = isCryptoToFiat ? fiats[Math.floor(Math.random()*fiats.length)] : cryptos[Math.floor(Math.random()*cryptos.length)];
         const isMicro = Math.random() > 0.6; 
 
-        // Розраховуємо суми на основі ліміту 50$ - 50,000$
         let giveAmt;
         const usdRate = rates[giveCur] || 1;
-        
-        // 50$ мінімум
+
         const minAmountInGiveCur = 50 / usdRate;
-        
-        // Максимальні суми (щоб виглядало реалістично)
-        // isMicro: обміни від 50$ до ~500$
-        // !isMicro: обміни від 500$ до ~25000$
         
         if (giveCur === 'BTC') {
             const minBtc = Math.max(0.0008, minAmountInGiveCur); // Запас
@@ -81,7 +75,6 @@ const RecentExchanges: React.FC = () => {
                 ? (Math.random() * (0.15 - minEth) + minEth).toFixed(3) 
                 : (Math.random() * 8 + 0.2).toFixed(3);
         } else {
-            // Для фіату та USDT
             const minFiat = Math.max(50, minAmountInGiveCur);
             giveAmt = isMicro 
                 ? Math.floor(Math.random() * (500 / usdRate - minFiat) + minFiat) 

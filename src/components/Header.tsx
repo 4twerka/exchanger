@@ -22,8 +22,8 @@ const languages = [
 const Header: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Стан для бургер-меню
-  const [isMobileLangOpen, setIsMobileLangOpen] = useState(false); // Стан для мов у бургер-меню
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); 
+  const [isMobileLangOpen, setIsMobileLangOpen] = useState(false); 
   const menuRef = useRef<HTMLDivElement>(null);
   
   const location = useLocation();
