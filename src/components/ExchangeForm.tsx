@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-const OPERATOR_USERNAME = 'cryptoex69';
+const OPERATOR_USERNAME = 'BestObmenManager';
 
 type CurrencyType = 'fiat' | 'crypto';
 
@@ -33,6 +33,10 @@ const FALLBACK_USD_RATES: Record<string, number> = {
   UAH: 0.025, PLN: 0.25, GBP: 1.25, CZK: 0.043,
   HUF: 0.0028, RON: 0.22
 };
+
+const MIN_EXCHANGE_EUR = 300;
+const MIN_EXCHANGE_USDT = 250;
+const MAX_EXCHANGE_EUR = 50000;
 
 interface CurrencyInputProps {
   label: string;
@@ -142,7 +146,8 @@ const ExchangeForm: React.FC = () => {
   const [getCurrency, setGetCurrency] = useState<Currency>(currencies[3]); 
   
   const [rate, setRate] = useState<number>(0);
-  const [usdRate, setUsdRate] = useState<number>(1); 
+  const [usdRate, setUsdRate] = useState<number>(1);
+  const [usdToEurRate, setUsdToEurRate] = useState<number>(1 / FALLBACK_USD_RATES.EUR);
   const [amountGive, setAmountGive] = useState<string>('');
   const [amountGet, setAmountGet] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -174,19 +179,31 @@ const ExchangeForm: React.FC = () => {
         if (isMounted) { setRate(1); setIsLoading(false); }
         return; 
       }
-      if (isMounted && rate === 0) setIsLoading(true);
+      if (isMounted) setIsLoading(true);
       
       try {
         let newRate = 0;
         let giveUsdRate = 1;
+        let currentUsdToEurRate = 1 / FALLBACK_USD_RATES.EUR;
+
+        try {
+          const usdRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
+          const usdData = await usdRes.json();
+          if (usdData?.rates?.EUR) {
+            currentUsdToEurRate = usdData.rates.EUR;
+          }
+        } catch {
+          currentUsdToEurRate = 1 / FALLBACK_USD_RATES.EUR;
+        }
         
         if (giveCurrency.type === 'fiat' && getCurrency.type === 'fiat') {
           const res = await fetch(`https://open.er-api.com/v6/latest/${giveCurrency.code}`);
           const data = await res.json();
           newRate = data.rates[getCurrency.code];
-          const usdRes = await fetch(`https://open.er-api.com/v6/latest/USD`);
-          const usdData = await usdRes.json();
-          giveUsdRate = 1 / usdData.rates[giveCurrency.code];
+          const giveToUsd = FALLBACK_USD_RATES[giveCurrency.code] || 1;
+          giveUsdRate = currentUsdToEurRate > 0 && data?.rates?.EUR
+            ? data.rates.EUR / currentUsdToEurRate
+            : giveToUsd;
         } else if (giveCurrency.type === 'crypto' && getCurrency.type === 'crypto') {
           const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${giveCurrency.id},${getCurrency.id}&vs_currencies=usd`);
           const data = await res.json();
@@ -213,11 +230,13 @@ const ExchangeForm: React.FC = () => {
           const finalRate = newRate * 0.98;
           setRate(finalRate);
           setUsdRate(giveUsdRate);
+          setUsdToEurRate(currentUsdToEurRate);
           setTimeLeft(300);
         }
-      } catch (error) { 
+      } catch { 
         if (isMounted) {
           setUsdRate(FALLBACK_USD_RATES[giveCurrency.code] || 1);
+          setUsdToEurRate(1 / FALLBACK_USD_RATES.EUR);
           setRate((FALLBACK_USD_RATES[giveCurrency.code] / FALLBACK_USD_RATES[getCurrency.code]) * 0.98);
           setTimeLeft(60);
         }
@@ -240,14 +259,24 @@ const ExchangeForm: React.FC = () => {
   };
 
   const validateLimits = (valueInGiveCurrency: number) => {
-      const valueInUsd = valueInGiveCurrency * usdRate;
-      if (valueInUsd < 50) {
-          setError(`${t('minExchange', 'Minimum amount:')} ${(50 / usdRate).toFixed(giveCurrency.type === 'crypto' ? 5 : 2)} ${giveCurrency.code} (~50 EUR)`);
-          return false;
-      } else if (valueInUsd > 50000) {
-          setError(`${t('maxExchange', 'Maximum amount:')} ${(50000 / usdRate).toFixed(giveCurrency.type === 'crypto' ? 5 : 2)} ${giveCurrency.code} (~50,000 EUR)`);
+      const giveEurRate = usdRate * usdToEurRate;
+      const valueInEur = valueInGiveCurrency * giveEurRate;
+
+      if (giveCurrency.code === 'USDT') {
+          if (valueInGiveCurrency < MIN_EXCHANGE_USDT) {
+              setError(`${t('minExchange', 'Minimum amount:')} ${MIN_EXCHANGE_USDT.toFixed(2)} USDT`);
+              return false;
+          }
+      } else if (valueInEur < MIN_EXCHANGE_EUR) {
+          setError(`${t('minExchange', 'Minimum amount:')} ${(MIN_EXCHANGE_EUR / giveEurRate).toFixed(giveCurrency.type === 'crypto' ? 5 : 2)} ${giveCurrency.code} (~${MIN_EXCHANGE_EUR} EUR)`);
           return false;
       }
+
+      if (valueInEur > MAX_EXCHANGE_EUR) {
+          setError(`${t('maxExchange', 'Maximum amount:')} ${(MAX_EXCHANGE_EUR / giveEurRate).toFixed(giveCurrency.type === 'crypto' ? 5 : 2)} ${giveCurrency.code} (~50,000 EUR)`);
+          return false;
+      }
+
       setError('');
       return true;
   };
